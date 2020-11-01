@@ -1,10 +1,3 @@
-'''
-Created on Oct 10, 2018
-Tensorflow Implementation of Neural Graph Collaborative Filtering (NGCF) model in:
-Wang Xiang et al. Neural Graph Collaborative Filtering. In SIGIR 2019.
-
-@author: Xiang Wang (xiangwang@u.nus.edu)
-'''
 import numpy as np
 import random as rd
 import scipy.sparse as sp
@@ -161,7 +154,6 @@ class Data(object):
             d_mat_inv = sp.diags(d_inv)
 
             norm_adj = d_mat_inv.dot(adj)
-            # norm_adj = adj.dot(d_mat_inv)
             print('generate single-normalized adjacency matrix.')
             return norm_adj.tocoo()
 
@@ -237,7 +229,7 @@ class Data(object):
         all_r_list = [0] * len(all_h_list)
         all_tag_list = [[]] * len(all_h_list)
         mask_tag = [[]] * len(all_h_list)
-        mask_tags = [[]] * len(all_h_list)
+        mask_tag_num = [1] * len(all_h_list)
 
         org_h_dict = dict()
 
@@ -254,11 +246,9 @@ class Data(object):
             org_t_list, org_r_list, org_v_list = org_h_dict[h]
             sort_t_list = np.array(org_t_list)
             sort_order = np.argsort(sort_t_list)
-
             sort_t_list = _reorder_list(org_t_list, sort_order)
             sort_r_list = _reorder_list(org_r_list, sort_order)
             sort_v_list = _reorder_list(org_v_list, sort_order)
-
             sorted_h_dict[h] = [sort_t_list, sort_r_list, sort_v_list]
         print('\tsort meta-data done.')
 
@@ -275,39 +265,28 @@ class Data(object):
 
 
         for i in range(len(all_h_list)):
+            mask_tag[i] = [0] * self.n_tag_max
+            all_tag_list[i] = [0] * (self.n_tag_max)
             if all_h_list[i] == all_t_list[i]:
-                all_r_list[i] = args.n_relations
-                all_tag_list[i] = [self.n_users + self.n_items + self.n_tags - 1] * (self.n_tag_max)
-                mask_tag[i] = [0] * self.n_tag_max
-                mask_tags[i] = [1] * 64
+                all_r_list[i] = 4
             else:
                 if all_h_list[i] < self.n_users:
                     all_r_list[i] = 0
                     item = all_t_list[i] - self.n_users
                     try:
-                        all_tag_list[i] = (np.asarray(self.item_tags[item]) + self.n_users + self.n_items).tolist() + [self.n_users + self.n_items+self.n_tags - 1] * (self.n_tag_max - len(self.item_tags[item]))
+                        all_tag_list[i] = (np.asarray(self.item_tags[item]) + self.n_users + self.n_items).tolist() + [0] * (self.n_tag_max - len(self.item_tags[item]))
                         mask_tag[i]=[1]*len(self.item_tags[item]) + [0] * (self.n_tag_max - len(self.item_tags[item]))
-                        mask_tags[i]=[len(self.item_tags[item])]*64
+                        mask_tag_num[i]=len(self.item_tags[item])
                     except:
-                        all_tag_list[i]=[self.n_users + self.n_items + self.n_tags - 1] * (self.n_tag_max)
-                        mask_tag[i] = [0] * self.n_tag_max
-                        mask_tags[i] = [1] * 64
-                if all_h_list[i] < self.n_users + self.n_items and all_h_list[i] >= self.n_users and all_t_list[i] < self.n_users+self.n_items:
+                        all_tag_list[i]=[0] * (self.n_tag_max)
+                if all_h_list[i] < self.n_users + self.n_items and all_h_list[i] >= self.n_users and all_t_list[i] < self.n_users:
                     all_r_list[i] = 1
-                    all_tag_list[i] = [self.n_users + self.n_items + self.n_tags - 1] * (self.n_tag_max)
-                    mask_tag[i] = [0] * self.n_tag_max
-                    mask_tags[i] = [1] * 64
                 if all_h_list[i] < self.n_users + self.n_items and all_h_list[i] >= self.n_users and all_t_list[i] >= self.n_users + self.n_items:
                     all_r_list[i] = 2
-                    all_tag_list[i] = [self.n_users + self.n_items + self.n_tags - 1] * (self.n_tag_max)
-                    mask_tag[i] = [0] * self.n_tag_max
-                    mask_tags[i] = [1] * 64
                 if all_h_list[i] >= self.n_users + self.n_items:
                     all_r_list[i] = 3
-                    all_tag_list[i] = [self.n_users + self.n_items + self.n_tags - 1] * (self.n_tag_max)
-                    mask_tag[i] = [0] * self.n_tag_max
-                    mask_tags[i] = [1] * 64
-        return all_h_list, all_t_list, all_r_list, all_v_list, all_tag_list, mask_tag, mask_tags
+
+        return all_h_list, all_t_list, all_r_list, all_v_list, all_tag_list, mask_tag, mask_tag_num
 
     def print_statistics(self):
         print('n_users=%d, n_items=%d, n_tags=%d' % (self.n_users, self.n_items, self.n_tags))
