@@ -12,7 +12,7 @@ Fan Liu, Zhiyong Cheng*, Lei Zhu, Chenghao Liu and Liqiang Nie*. [An Attribute-a
 
 Run a2_gcn.py
 ```
-python a2_gcn.py --dataset Toys_and_Games --num_neg 4 --embed_size 64 --batch_size 1024 --layer_size [64,64,64] --pretrain -1
+python a2_gcn.py --dataset Toys_and_Games  --embed_size 64 --batch_size 1024 --layer_size [64,64,64] --pretrain -1
 ```
 
 ### Dataset
