@@ -1,7 +1,7 @@
 '''
 Created on Oct 10, 2018
 Tensorflow Implementation of An Attribute-aware Attentive GCN (a2-gcn) model in:
-Liu Fan et al. A2-GCN: An Attribute-aware Attentive GCNModel for Recommendation. In TKDE.
+Liu Fan et al. An Attribute-aware Attentive GCNModel for Attribute Missing in Recommendation. In TKDE.
 
 @author: Liu Fan (liufancs@gmail.com)
 '''
@@ -54,7 +54,7 @@ class a2_gcn(object):
         self.pos_t0 = tf.placeholder(tf.int32, shape=[None], name='pos_t0')
         self.pos_tags_u = tf.placeholder(tf.int32, shape=[None, None], name='pos_tags_u')
         self.mask_pos_tags_u = tf.placeholder(tf.int32, shape=[None, None], name='mask_pos_tags_u')
-        self.mask_pos_tags_us = tf.placeholder(tf.float32, shape=[None, None], name='mask_pos_tags_us')
+        self.mask_pos_tags_u_num = tf.placeholder(tf.float32, shape=[None], name='mask_pos_tags_us')
 
         self.node_dropout_flag = args.node_dropout_flag
         self.node_dropout = tf.placeholder(tf.float32, shape=None)
@@ -234,7 +234,7 @@ class a2_gcn(object):
         return pre_out * tf.div(1., keep_prob)
 
     def _build_model_phase_II(self):
-        self.A_score = self._generate_score(self.h0, self.pos_t0, self.r0, self.pos_tags_u,self.mask_pos_tags_u,self.mask_pos_tags_us)
+        self.A_score = self._generate_score(self.h0, self.pos_t0, self.r0, self.pos_tags_u,self.mask_pos_tags_u,self.mask_pos_tags_u_num)
         self.A_out = self._create_attentive_A_out()
 
     def _create_attentive_A_out(self):
@@ -242,16 +242,15 @@ class a2_gcn(object):
         A = tf.sparse_softmax(tf.SparseTensor(indices, self.A_values, self.A_in.shape))
         return A
 
-    def _generate_score(self, u, t, r, pos_tags_u, mask_pos_tags_u, mask_pos_tags_us):
+    def _generate_score(self, u, t, r, pos_tags_u, mask_pos_tags_u, mask_pos_tags_u_num):
         embeddings = tf.concat([self.weights['user_embedding'], self.weights['item_embedding'], self.weights['tag_embedding']], axis=0)
         pos_t = tf.nn.embedding_lookup(embeddings, pos_tags_u)
         embeddings = tf.expand_dims(embeddings, 1)
         mask_pos_tags_u = tf.nn.embedding_lookup(self.weights['mask_tag'], mask_pos_tags_u)
-        p_t = tf.divide(tf.reduce_sum(tf.multiply(pos_t, mask_pos_tags_u), axis=1), mask_pos_tags_us)
+        p_t = tf.divide(tf.reduce_sum(tf.multiply(pos_t, mask_pos_tags_u), axis=1), tf.expand_dims(mask_pos_tags_u_num, axis=1))
         u_e = tf.nn.embedding_lookup(embeddings, u)
         t_e = tf.nn.embedding_lookup(embeddings, t)
-        t_e_1 = tf.matmul(p_t, self.weights['W_gc_0']) + self.weights['b_gc_0']
-        t_e = tf.nn.leaky_relu(t_e + tf.expand_dims(t_e_1, axis=1))
+        t_e = tf.nn.leaky_relu(t_e + tf.expand_dims(tf.matmul(p_t, self.weights['W_gc_0']) + self.weights['b_gc_0'], axis=1))
 
         # transform weight
         trans_w = tf.nn.embedding_lookup(self.weights['trans_w'], r)
@@ -277,7 +276,7 @@ class a2_gcn(object):
                 self.pos_t0: self.all_t_list[start:end],
                 self.pos_tags_u: self.all_tag_list[start:end],
                 self.mask_pos_tags_u: self.mask_tag[start:end],
-                self.mask_pos_tags_us: self.mask_tags[start:end]
+                self.mask_pos_tags_u_num: self.mask_tags[start:end]
             }
             A_score = sess.run(self.A_score, feed_dict=feed_dict)
             kg_score += list(A_score)
