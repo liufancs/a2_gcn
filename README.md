@@ -28,6 +28,6 @@ test.txt:
 tag.txt:
 - Tag file.
 
-We also provide the pretrained features, which can improve the speed of convergence, . The pre-trained feature (Kindle Store) could be downloaded from :
+We also provide the pretrained features, which can improve the speed of convergence. The pre-trained feature (Kindle Store) could be downloaded from :
 - Link:  https://pan.baidu.com/s/1-f0BsPs-kPZSupzb--EdLA
 - Extract code:  ditf 
