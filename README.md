@@ -16,6 +16,8 @@ python a2_gcn.py --dataset Toys_and_Games  --embed_size 64 --batch_size 1024 --l
 ```
 
 ### Dataset
+We provide four processed datasets: Amazon-Toys&Games, Amazon-Kindle Store (Kin).
+Each dataset file contains:
 
 train.txt:
 - Train file.
@@ -25,3 +27,7 @@ test.txt:
 
 tag.txt:
 - Tag file.
+
+The pre-trained feature could be downloaded from :
+- Link:  https://pan.baidu.com/s/1-f0BsPs-kPZSupzb--EdLA
+- Extract code:  ditf 
