@@ -16,7 +16,7 @@ python a2_gcn.py --dataset Toys_and_Games  --embed_size 64 --batch_size 1024 --l
 ```
 
 ### Dataset
-We provide four processed datasets: Amazon-Toys&Games, Amazon-Kindle Store (Kin).
+We provide two processed datasets: Amazon-Toys&Games, Amazon-Kindle Store (Kin).
 Each dataset file contains:
 
 train.txt:
